@@ -22,8 +22,18 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.REACT_APP_URL': JSON.stringify('development'),
     }),
-    isDevelopment && new ReactRefreshWebpackPlugin(),
+    isDevelopment ? [new ReactRefreshWebpackPlugin()] : [],
+    isDevelopment &&
+      (function () {
+        try {
+          return require.resolve('react-refresh/babel')
+        } catch (e) {
+          console.warn('react-refresh/babel not found')
+          return null
+        }
+      })(),
   ].filter(Boolean),
+
   output: {
     filename: 'bundle.js',
     path: path.join(__dirname, 'dist'),
@@ -43,7 +53,15 @@ module.exports = {
               ['@babel/preset-react', { runtime: 'automatic' }],
             ],
             plugins: [
-              isDevelopment && require.resolve('react-refresh/babel'),
+              isDevelopment &&
+                (function () {
+                  try {
+                    return require.resolve('react-refresh/babel')
+                  } catch (e) {
+                    console.warn('react-refresh/babel not found')
+                    return null
+                  }
+                })(),
             ].filter(Boolean),
           },
         },
