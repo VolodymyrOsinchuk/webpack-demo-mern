@@ -22,7 +22,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.REACT_APP_URL': JSON.stringify('development'),
     }),
-    isDevelopment ? [new ReactRefreshWebpackPlugin()] : [],
+    ...(isDevelopment ? [new ReactRefreshWebpackPlugin()] : []),
     isDevelopment &&
       (function () {
         try {
