@@ -5,6 +5,9 @@ const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+const CURRENT_DIR = process.cwd()
+console.log('🚀 ~ CURRENT_DIR:', CURRENT_DIR)
+
 const htmlPlugin = new HtmlWebPackPlugin({
   template: './src/index.html',
   filename: './index.html',

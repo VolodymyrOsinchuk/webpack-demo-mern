@@ -41,7 +41,8 @@ app.use('/api/auth', authRouter)
 
 // Serveur des fichiers static en production
 if (process.env.NODE_ENV === 'production') {
-  const distPath = path.resolve(__dirname, '../dist')
+  const distPath = path.join(__dirname, '../dist')
+  console.log('🚀 ~  distPath:', distPath)
 
   // Serveur des assets statiques
   app.use(express.static(distPath))
