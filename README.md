@@ -32,3 +32,15 @@ git push -u origin main
     "dev:client": "webpack serve --open",
     "dev:server": "nodemon server/index.js",
     "watch": "webpack --watch"
+
+Debug this error
+
+500 FUNCTION_INVOCATION_FAILED
+
+Request ID: cdg1:cdg1::gjbsr-1795517629340-2076442165bb
+URL: https://webpack-demo-mern-i8tsn5b8n-volodymyrosinchuks-projects.vercel.app/
+User agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36
+Docs for this error code: https://vercel.com/docs/errors/function_invocation_failed
+
+To inspect runtime logs for this request with the Vercel CLI, run:
+vercel logs --request-id cdg1:cdg1::gjbsr-1795517629340-2076442165bb

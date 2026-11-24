@@ -32,6 +32,7 @@ module.exports = {
       template: "./src/index.html",
       filename: "index.html",
       title: "React Webpack",
+      favicon: "./src/favicon.ico",
     }),
 
     // Environment variables

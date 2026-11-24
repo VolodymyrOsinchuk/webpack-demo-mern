@@ -8,6 +8,7 @@ if (!process.env.PRIVATE_KEY) {
 
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 const morgan = require("morgan");
 const createError = require("http-errors");
@@ -82,10 +83,12 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 
-// Serveur des fichiers static en production
-if (process.env.NODE_ENV === "production") {
-  const distPath = path.join(__dirname, "../dist");
-  console.log("🚀 ~  distPath:", distPath);
+// Serveur des fichiers statiques : active dès que le dossier dist existe
+// (build local, ou dossier inclus dans la fonction serverless Vercel)
+const distPath = path.join(__dirname, "../dist");
+
+if (fs.existsSync(distPath)) {
+  console.log("🚀 distPath:", distPath);
 
   // Serveur des assets statiques
   app.use(express.static(distPath));
