@@ -1,10 +1,15 @@
-import React, { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App'
-import './index.css'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
-createRoot(document.getElementById('app')).render(
+import App from "./App";
+import { AuthProvider } from "./context/AuthContext";
+
+import "./index.css";
+
+createRoot(document.getElementById("app")).render(
   <StrictMode>
-    <App />
-  </StrictMode>
-)
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </StrictMode>,
+);
