@@ -10,6 +10,7 @@
     "dev:server": "nodemon server/index.js",
     "build:client": " NODE_ENV=production webpack --progress",
     "build": "NODE_ENV=production webpack --progress",
+    "vercel-build": "NODE_ENV=production webpack --progress",
     "lint": "eslint src server --ext js,jsx"
   },
   "keywords": [],
