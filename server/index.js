@@ -44,7 +44,7 @@ const app = express();
 // Vercel injecte automatiquement VERCEL_URL = "ton-app.vercel.app" (sans https://)
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://webpack-demo-mern.vercel.app",
+  process.env.FRONTEND_URL,
   process.env.REACT_APP_API_URL,
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
 ].filter(Boolean);
