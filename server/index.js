@@ -15,61 +15,62 @@ const createError = require("http-errors");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 
-// const config = require('../webpack.config')
-// const compiler = webpack(config)
-
 const authRouter = require("./routes/authRoute");
 const userRouter = require("./routes/userRoute");
+
 // Configuration DB
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/test";
 
+// ─── Connexion Mongoose avec cache (compatible serverless Vercel) ──────────────
+let isConnected = false;
+
 async function connectDatabase() {
-  try {
-    console.log("Connecting to MongoDB...");
-
-    await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
-    });
-
-    console.log("Successfully connected to MongoDB");
-
-    return mongoose.connection;
-  } catch (error) {
-    console.error("MongoDB connection failed:", error.message);
-    throw error;
+  if (isConnected && mongoose.connection.readyState === 1) {
+    console.log("Using existing MongoDB connection");
+    return;
   }
+  console.log("Connecting to MongoDB...");
+  await mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 10000,
+    bufferCommands: false,
+  });
+  isConnected = true;
+  console.log("Successfully connected to MongoDB");
 }
-
-async function main() {
-  try {
-    await connectDatabase();
-
-    // Your application logic goes here
-  } catch (error) {
-    console.error("Application startup failed:", error);
-
-    process.exitCode = 1;
-  }
-}
-
-main();
-// app.use(
-//   webpackConfigMiddleware(compiler, {
-//     publicPath: config.output.publicPath,
-//     writeToDisk: true,
-//   })
-// )
 
 const app = express();
 
-// Middlewares
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+// Vercel injecte automatiquement VERCEL_URL = "ton-app.vercel.app" (sans https://)
+const allowedOrigins = [
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin:
-      process.env.CORS_ORIGIN || process.env.VERCEL_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   }),
 );
+
+// ─── Middleware DB : connecte avant chaque requête ────────────────────────────
+app.use(async (req, res, next) => {
+  try {
+    await connectDatabase();
+    next();
+  } catch (error) {
+    console.error("MongoDB connection failed:", error.message);
+    res.status(503).json({ error: "Database unavailable" });
+  }
+});
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -79,42 +80,36 @@ app.use(cookieParser());
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date() });
 });
+
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 
-// Serveur des fichiers statiques : active dès que le dossier dist existe
-// (build local, ou dossier inclus dans la fonction serverless Vercel)
+// ─── Fichiers statiques (dist buildé par webpack) ─────────────────────────────
 const distPath = path.join(__dirname, "../dist");
 
 if (fs.existsSync(distPath)) {
-  console.log("🚀 distPath:", distPath);
-
-  // Serveur des assets statiques
+  console.log("Serving static files from:", distPath);
   app.use(express.static(distPath));
 
-  // Gestion du routing client-side (regex valide avec Express 5 — app.get("*") lève un PathError)
+  // Client-side routing fallback (compatible Express 5)
   app.all(/\/.*/, (req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
-// Error Handling
+// ─── Error Handling ───────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   next(createError.NotFound());
 });
-app.use((err, req, res) => {
-  res.status(err.status || 500);
-  res.json({
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
     error: {
       status: err.status || 500,
       message: err.message,
     },
   });
-});
-app.use(function (err, req, res) {
-  console.error(err.stack);
-  res.status(500).send("Something broke!");
 });
 
 const port = process.env.PORT || 5000;
@@ -122,3 +117,5 @@ const port = process.env.PORT || 5000;
 app.listen(port, function () {
   console.log("App listening on port: " + port);
 });
+
+module.exports = app;
